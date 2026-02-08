@@ -1,0 +1,26 @@
+{
+    "id": "evt_test_cancel_1",
+    "type": "customer.subscription.deleted",
+    "created": 1716302000,
+    "data": {
+        "object": {
+            "id": "sub_test_1",
+            "customer": "cus_test_1",
+            "status": "canceled",
+            "items": {
+                "data": [
+                    {
+                        "quantity": 2,
+                        "plan": {
+                            "id": "price_1",
+                            "product": "prod_1",
+                            "amount": 10000,
+                            "currency": "usd",
+                            "interval": "month"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

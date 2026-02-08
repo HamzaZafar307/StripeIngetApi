@@ -1,0 +1,30 @@
+services:
+  app:
+    build:
+      context: ./StripeIngest.Api
+      dockerfile: Dockerfile
+    container_name: stripe_ingest_api
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=StripeIngestDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5185:8080"
+    depends_on:
+      sqlserver:
+        condition: service_started
+    restart: always
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: stripe_ingest_sql
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=YourStrong@Passw0rd
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+
+volumes:
+  sql_data:

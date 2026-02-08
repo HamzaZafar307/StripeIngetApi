@@ -1,0 +1,26 @@
+{
+    "id": "evt_test_update_1",
+    "type": "customer.subscription.updated",
+    "created": 1716301000,
+    "data": {
+        "object": {
+            "id": "sub_test_1",
+            "customer": "cus_test_1",
+            "status": "active",
+            "items": {
+                "data": [
+                    {
+                        "quantity": 2,
+                        "plan": {
+                            "id": "price_1",
+                            "product": "prod_1",
+                            "amount": 10000,
+                            "currency": "usd",
+                            "interval": "month"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

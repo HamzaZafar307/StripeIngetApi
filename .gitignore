@@ -1,0 +1,29 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userprefs
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# Docker
+docker-compose.override.yml
+
+# Environment
+.env
+
+# Testing
+test_output.txt
+TestResults/
+
+# OS
+.DS_Store
+Thumbs.db
