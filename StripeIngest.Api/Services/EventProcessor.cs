@@ -120,6 +120,9 @@ public class EventProcessor : IEventProcessor
                 firstCurrency = plan.GetProperty("currency").GetString() ?? "";
             }
 
+            // Convert Amount from Cents to Dollars (Stripe sends amount in lowest currency unit)
+            amount = amount / 100m;
+
             decimal itemMrr = amount * itemQuantity;
             if (interval == "year")
             {
@@ -212,9 +215,58 @@ public class EventProcessor : IEventProcessor
             PreviousMRR = previousMrr,
             NewMRR = mrr,
             MRRDelta = mrr - previousMrr,
-            Timestamp = eventTimestamp
+            Timestamp = eventTimestamp,
+            Product = productId,
+            Price = priceId,
+            Quantity = quantity,
+            Currency = currency
         };
 
         _context.SubscriptionHistory.Add(history);
+    }
+
+    private async Task HandleInvoiceEvent(JsonElement json, string eventId, DateTime eventTimestamp)
+    {
+        var data = json.GetProperty("data").GetProperty("object");
+        
+        // Invoices have "subscription" field directly, not "id" of subscription
+        if (!data.TryGetProperty("subscription", out var subIdProp)) return;
+        
+        string? subId = subIdProp.GetString();
+        if (string.IsNullOrEmpty(subId)) return;
+
+        // Fetch Current State
+        var currentState = await _context.CurrentSubscriptions
+            .FirstOrDefaultAsync(s => s.SubscriptionId == subId);
+
+        if (currentState == null)
+        {
+            _logger.LogWarning("Received invoice for unknown subscription {SubscriptionId}", subId);
+            return;
+        }
+
+        // Record Renewal History
+        // Renewal doesn't change MRR, so Delta is 0.
+        var history = new SubscriptionHistory
+        {
+            SubscriptionId = subId,
+            EventId = eventId,
+            ChangeType = "renewal", // Explicitly mark as renewal
+            PreviousMRR = currentState.CurrentAmount,
+            NewMRR = currentState.CurrentAmount,
+            MRRDelta = 0,
+            Timestamp = eventTimestamp,
+            Product = currentState.CurrentProduct,
+            Price = currentState.CurrentPrice,
+            Quantity = currentState.CurrentQuantity,
+            Currency = currentState.Currency
+        };
+
+        _context.SubscriptionHistory.Add(history);
+        
+        // Update LastUpdated on CurrentSubscription to reflect activity
+        currentState.LastEventId = eventId;
+        currentState.LastUpdated = eventTimestamp;
+        _context.CurrentSubscriptions.Update(currentState);
     }
 }

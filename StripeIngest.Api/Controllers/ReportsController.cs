@@ -18,6 +18,11 @@ public class ReportsController : ControllerBase
         _context = context;
     }
 
+    /// <summary>
+    /// Retrieves the events and entire history for a specific customer.
+    /// </summary>
+    /// <param name="customerId">The Stripe Customer ID (e.g. cus_123).</param>
+    /// <returns>A list of all events and their history for a specific customer.</returns>
     [HttpGet("customer/{customerId}/history")]
     public async Task<IActionResult> GetCustomerHistory(string customerId)
     {
@@ -29,6 +34,10 @@ public class ReportsController : ControllerBase
         return Ok(history);
     }
 
+    /// <summary>
+    /// Retrieves the Monthly Recurring Revenue (MRR) report.
+    /// </summary>
+    /// <returns>A list of monthly MRR stats including New, Churn, Expansion, and Contraction MRR.</returns>
     [HttpGet("mrr/monthly")]
     public async Task<IActionResult> GetMonthlyMrr()
     {
@@ -40,6 +49,10 @@ public class ReportsController : ControllerBase
         return Ok(report);
     }
 
+    /// <summary>
+    /// Retrieves the Yearly Recurring Revenue (ARR/MRR) report.
+    /// </summary>
+    /// <returns>A list of yearly aggregation stats.</returns>
     [HttpGet("mrr/yearly")]
     public async Task<IActionResult> GetYearlyMrr()
     {
@@ -66,5 +79,27 @@ public class ReportsController : ControllerBase
             .ToList();
 
         return Ok(report);
+    }
+    /// <summary>
+    /// Retrieves a summary of all subscription statuses.
+    /// </summary>
+    /// <returns>Counts of active, canceled, etc. subscriptions.</returns>
+    [HttpGet("subscriptions/summary")]
+    public async Task<IActionResult> GetSubscriptionSummary()
+    {
+        var summary = await _context.CurrentSubscriptions
+            .GroupBy(s => s.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count(), TotalMRR = g.Sum(s => s.CurrentAmount) })
+            .ToListAsync();
+
+        var totalActive = summary.Where(x => x.Status == "active").Sum(x => x.Count);
+        var totalActiveMrr = summary.Where(x => x.Status == "active").Sum(x => x.TotalMRR);
+
+        return Ok(new
+        {
+            TotalActiveSubscriptions = totalActive,
+            TotalActiveMRR = totalActiveMrr,
+            Details = summary
+        });
     }
 }

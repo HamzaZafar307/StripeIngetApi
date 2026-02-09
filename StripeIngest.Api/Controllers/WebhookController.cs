@@ -19,12 +19,89 @@ public class WebhookController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// Receives Stripe webhook events.
+    /// </summary>
+    /// <remarks>
+    /// Send a JSON payload to simulate a Stripe event. 
+    /// 
+    /// **Example 1: Monthly Subscription ($100/mo)**
+    /// 
+    ///     POST /api/webhook
+    ///     {
+    ///       "id": "evt_monthly_1",
+    ///       "type": "customer.subscription.created",
+    ///       "created": 1704067200,
+    ///       "data": {
+    ///         "object": {
+    ///           "id": "sub_monthly",
+    ///           "customer": "cus_test",
+    ///           "status": "active",
+    ///           "items": {
+    ///             "data": [
+    ///               {
+    ///                 "quantity": 1,
+    ///                 "plan": {
+    ///                   "id": "price_month",
+    ///                   "product": "prod_month",
+    ///                   "amount": 10000,
+    ///                   "currency": "usd",
+    ///                   "interval": "month"
+    ///                 }
+    ///               }
+    ///             ]
+    ///           }
+    ///         }
+    ///       }
+    ///     }
+    ///     
+    /// **Example 2: Yearly Subscription ($1200/yr)**
+    /// 
+    ///     POST /api/webhook
+    ///     {
+    ///       "id": "evt_yearly_1",
+    ///       "type": "customer.subscription.created",
+    ///       "created": 1704067200,
+    ///       "data": {
+    ///         "object": {
+    ///           "id": "sub_yearly",
+    ///           "customer": "cus_test",
+    ///           "status": "active",
+    ///           "items": {
+    ///             "data": [
+    ///               {
+    ///                 "quantity": 1,
+    ///                 "plan": {
+    ///                   "id": "price_year",
+    ///                   "product": "prod_year",
+    ///                   "amount": 120000,
+    ///                   "currency": "usd",
+    ///                   "interval": "year"
+    ///                 }
+    ///               }
+    ///             ]
+    ///           }
+    ///         }
+    ///       }
+    ///     }
+    /// </remarks>
+    /// <param name="evt">The webhook event payload.</param>
+    /// <response code="200">Event processed successfully</response>
+    /// <response code="400">Invalid event payload</response>
+    /// <response code="500">Internal server error</response>
     [HttpPost]
-    public async Task<IActionResult> Receive([FromBody] JsonElement json)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> Receive([FromBody] Dtos.StripeEventDto evt)
     {
         try
         {
-            await _processor.ProcessEventAsync(json);
+            // Serialize back to JsonElement to maintain existing processing logic
+            var jsonString = JsonSerializer.Serialize(evt);
+            var jsonElement = JsonDocument.Parse(jsonString).RootElement;
+
+            await _processor.ProcessEventAsync(jsonElement);
             return Ok(new { message = "Event processed" });
         }
         catch (Exception ex)

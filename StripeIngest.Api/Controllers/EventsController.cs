@@ -16,6 +16,10 @@ public class EventsController : ControllerBase
         _context = context;
     }
 
+    /// <summary>
+    /// Retrieves a list of all raw Stripe events received.
+    /// </summary>
+    /// <returns>A list of raw events ordered by creation time.</returns>
     [HttpGet]
     public async Task<IActionResult> GetAllEvents()
     {

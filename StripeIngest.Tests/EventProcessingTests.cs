@@ -60,7 +60,7 @@ public class EventProcessingTests
         using var context = GetContext();
         var processor = new EventProcessor(context, NullLogger<EventProcessor>.Instance);
 
-        var evt = CreateEvent("evt_1", "customer.subscription.created", "sub_1", "active", 100);
+        var evt = CreateEvent("evt_1", "customer.subscription.created", "sub_1", "active", 10000);
 
         await processor.ProcessEventAsync(evt);
 
@@ -78,10 +78,10 @@ public class EventProcessingTests
         var processor = new EventProcessor(context, NullLogger<EventProcessor>.Instance);
 
         // 1. Create
-        await processor.ProcessEventAsync(CreateEvent("evt_1", "customer.subscription.created", "sub_1", "active", 100));
+        await processor.ProcessEventAsync(CreateEvent("evt_1", "customer.subscription.created", "sub_1", "active", 10000));
 
         // 2. Upgrade (Amount 200)
-        await processor.ProcessEventAsync(CreateEvent("evt_2", "customer.subscription.updated", "sub_1", "active", 200));
+        await processor.ProcessEventAsync(CreateEvent("evt_2", "customer.subscription.updated", "sub_1", "active", 20000));
 
         var sub = await context.CurrentSubscriptions.FindAsync("sub_1");
         Assert.Equal(200, sub.CurrentAmount);
@@ -99,7 +99,7 @@ public class EventProcessingTests
         using var context = GetContext();
         var processor = new EventProcessor(context, NullLogger<EventProcessor>.Instance);
 
-        var evt = CreateEvent("evt_1", "customer.subscription.created", "sub_1", "active", 100);
+        var evt = CreateEvent("evt_1", "customer.subscription.created", "sub_1", "active", 10000);
 
         // First Process
         await processor.ProcessEventAsync(evt);
@@ -117,8 +117,8 @@ public class EventProcessingTests
         using var context = GetContext();
         var processor = new EventProcessor(context, NullLogger<EventProcessor>.Instance);
 
-        await processor.ProcessEventAsync(CreateEvent("evt_1", "customer.subscription.created", "sub_1", "active", 100));
-        await processor.ProcessEventAsync(CreateEvent("evt_2", "customer.subscription.deleted", "sub_1", "canceled", 100)); // Stripe still sends last known plan info usually
+        await processor.ProcessEventAsync(CreateEvent("evt_1", "customer.subscription.created", "sub_1", "active", 10000));
+        await processor.ProcessEventAsync(CreateEvent("evt_2", "customer.subscription.deleted", "sub_1", "canceled", 10000)); // Stripe still sends last known plan info usually
 
         var sub = await context.CurrentSubscriptions.FindAsync("sub_1");
         Assert.Equal("canceled", sub.Status);

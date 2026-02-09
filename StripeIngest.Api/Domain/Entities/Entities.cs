@@ -37,6 +37,12 @@ public class SubscriptionHistory
     public decimal NewMRR { get; set; }
     public decimal MRRDelta { get; set; }
     public DateTime Timestamp { get; set; }
+
+    // New fields for detailed history
+    public string? Product { get; set; }
+    public string? Price { get; set; }
+    public int Quantity { get; set; }
+    public string? Currency { get; set; }
 }
 
 // Keyless entity for Reporting View
